@@ -1,24 +1,13 @@
-from games.Nim import Nim
+from games.nim import Nim
+from mcts.mcts import MCTS
+from mcts.stateManager import StateManager
 
 nim = Nim()
+sman = StateManager(nim)
+mcts = MCTS(sman)
+mcts.train(10)
 
-win = False
-states = nim.gen_initial_states()
 
-while not win:
-    layer = []
-    for state in states:
-        child_states = nim.gen_child_states(state)
-        state["children"] = child_states
-        for child_state in child_states:
-            if child_state["winning"]:
-                while child_state:
-                    print(child_state["player"], child_state["n"], child_state["k"])
-                    child_state = child_state["parent"]
-                exit()
-        layer += child_states
-    states = layer
 
-print(states)
 
 #print(nim.gen_child_states(sta)
