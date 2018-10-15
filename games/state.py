@@ -1,10 +1,12 @@
 import numpy as np
+import abc
 
 class State:
 
-    def __init__(self, parent, player):
+    def __init__(self, parent, player, players):
         self.parent: State = parent
         self.player = player
+        self.players = players
         self.children = []
         self.visits = 0
         self.wins = 0
@@ -28,3 +30,12 @@ class State:
 
     def get_random_child(self):
         raise NotImplementedError(self.get_random_child.__name__)
+
+    @abc.abstractmethod
+    def option_text(self):
+        raise NotImplementedError(self.option_text.__name__)
+
+    @abc.abstractmethod
+    def get_next_states(self):
+        raise NotImplementedError(self.get_next_states.__name__)
+
