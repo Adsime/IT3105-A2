@@ -1,14 +1,13 @@
 from games.game import Game
-
+from games.state import State
 
 class StateManager:
-
-    def __init__(self, game: Game):
+    def __init__(self, game: Game, m, g):
         self.game = game
-        self.root = game.gen_initial_states()
+        self.m = m
+        self.g = g
+        self.root: State = game.gen_initial_state()
 
-    def get_child_states(self, state):
-        child_states = state["children"]
-        if not len(child_states):
-            child_states = self.game.gen_child_states(state)
-        return child_states
+    def get_child_states(self, state: State):
+        return self.game.gen_child_states(state)
+

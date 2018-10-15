@@ -1,32 +1,44 @@
 from games.game import Game
+from games.state import State
+import random
+
+
+class NimState(State):
+
+    def __init__(self, parent: State, player, n):
+        self.super = State.__init__(self, parent, player)
+        self.n = n
+
+    def is_terminal(self):
+        return not self.n
 
 
 class Nim(Game):
 
-    def __init__(self, n=10, k=3):
+    def __init__(self, players, p, n=10, k=3):
         Game.__init__(self, "Nim")
+        self.players = players
+        self.p = p
         self.n = n  # Stone count
         self.k = k  # Max count of stones to remove
 
-    def gen_initial_states(self):
-        state = self.gen_state(None, None, 0, self.n)
-        children = []
-        for i in range(1, self.k+1):
-            children.append(self.gen_state(state, 1, i, self.n))
-        state["children"] = children
+    def new_game(self):
+        state = self.gen_initial_state()
+
+
+    def gen_initial_state(self):
+        fp = random.choice(self.players) if self.p == "mix" else self.players[self.p]
+        state = NimState(None, fp, self.n)
         return state
 
-    def gen_child_states(self, state):
-        player = 2 if state["player"] == 1 else 1
+    def gen_child_states(self, state: NimState):
         states = []
-        for i in range(1, min(state["n"], self.k) + 1):
-            states.append(self.gen_state(state, player, i, state["n"]))
+        player = self.players[(self.players.index(state.player) + 1) % len(self.players)]
+        for i in range(1, min(state.n, self.k) + 1):
+            states.append(NimState(state, player, state.n - i))
         return states
 
-    def is_winning(self, state):
-        return not state["n"]
-
-    def gen_state(self, parent, player, k, n):
-        return {"parent": parent, "player": player, "k": k, "n": n-k,
-                "winning": not n-k, "children": [], "wins": 0, "visits": 0}
+    @staticmethod
+    def human_player():
+        return input
 

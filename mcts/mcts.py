@@ -1,39 +1,44 @@
 from mcts.stateManager import StateManager
 import random
-
+from games.state import State
+import numpy as np
 
 class MCTS:
 
     def __init__(self, state_manager: StateManager):
         self.state_manager = state_manager
 
-    def search(self, state):
-        if state["winning"]:
-            return state
-        return self.search(self.determine_next_state(state))
+    def simulate(self, state: State):
+        current_player = state.player
+        for i in range(self.state_manager.m):
+            child = self.tree_search(state, current_player)
+            wins = 0
+            for j in range(self.state_manager.g):
+                wins += 1 if self.do_random_walk(child).player != current_player else 0
+            self.backpropagate(child, wins, self.state_manager.g)
 
-    def determine_next_state(self, state):
-        children = self.state_manager.get_child_states(state)
-        branch_values = []
-        for child in children:
-            if child["winning"]: return child
-            branch_values.append(self.calculate_branch_value(child))
-        return random.choice(children)
+    def do_random_walk(self, state: State):
+        while not state.is_terminal():
+            choices = self.state_manager.get_child_states(state)
+            state = random.choice(choices)
+        return state
 
-    def calculate_branch_value(self, state):
-        pass
-
-    def backpropagate(self, state):
-        winner = state["player"]
-        while state:
-            state["visits"] += 1
-            state["wins"] += 1 if state["player"] == winner else 0
-
-    def train(self, episodes):
-        for i in range(episodes):
-            leaf_state = self.search(self.state_manager.root)
-            self.backpropagate(leaf_state)
+    def tree_search(self, state: State, current_player):
+        unvisited_states = [s for s in state.children if not s.visits]
+        return random.choice(unvisited_states) if len(unvisited_states) > 0 \
+            else self.get_best_child(state, current_player != state.player)
 
 
+    def get_best_child(self, state: State, max=True):
+        max = np.argmax([s.get_uct() for s in state.children]) if max \
+            else np.argmin([s.q - s.u for s in state.children])
+        return state.children[max]
 
+    def expand(self, state: State):
+        state.children = self.state_manager.get_child_states(state)
+
+    def backpropagate(self, state: State, wins, visits):
+        state.update(wins, visits)
+        if state.parent:
+            self.backpropagate(state.parent, wins, visits)
 
