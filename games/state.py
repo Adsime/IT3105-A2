@@ -1,6 +1,7 @@
 import numpy as np
 import abc
 
+
 class State:
 
     def __init__(self, parent, player, players):
@@ -34,8 +35,4 @@ class State:
     @abc.abstractmethod
     def option_text(self):
         raise NotImplementedError(self.option_text.__name__)
-
-    @abc.abstractmethod
-    def get_next_states(self):
-        raise NotImplementedError(self.get_next_states.__name__)
 

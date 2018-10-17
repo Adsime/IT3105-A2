@@ -1,6 +1,6 @@
 import abc
 from games.state import State
-from mcts.mcts import MCTS, StateManager
+from games.game import Game
 
 
 class Player:
@@ -9,7 +9,7 @@ class Player:
         self.name = name
 
     @abc.abstractmethod
-    def request_input(self, state):
+    def request_input(self, game: Game, state: State):
         raise NotImplementedError(self.request_input.__name__)
 
     def reset(self):

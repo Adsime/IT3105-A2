@@ -1,4 +1,4 @@
-from players.player import Player, StateManager
+from players.player import Player, Game, State
 
 
 class Human(Player):
@@ -6,8 +6,8 @@ class Human(Player):
     def __init__(self, name):
         Player.__init__(self, name)
 
-    def request_input(self, state):
-        options = state.get_next_states()
+    def request_input(self, game: Game, state: State):
+        options = game.gen_child_states(state)
         return options[self.query_user([s.option_text() for s in options])]
 
     def query_user(self, options):

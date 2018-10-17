@@ -1,12 +1,7 @@
-from games.nim import Nim
-from mcts.mcts import MCTS
-from mcts.stateManager import StateManager, State
-from players.human import Human
+from games.nim.nim import Nim
 from players.ai import AI
 
-nim = Nim([AI("Timmy"), AI("Bob")], "mix")
-sman = StateManager(nim, 100, 100)
-
+nim = Nim([AI("Timmy", 100, 100), AI("Bob", 100, 100)], "mix")
 nim.new_game()
 
 
