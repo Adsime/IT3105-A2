@@ -8,6 +8,7 @@ class Game:
 
     def __init__(self, name):
         self.name = name
+        self.current_player = None
 
     @abc.abstractmethod
     def gen_initial_state(self):
@@ -18,11 +19,6 @@ class Game:
     def gen_child_states(self, state: State):
         raise NotImplementedError("Game " + self.name + " is missing implementation for "
                                   + self.gen_child_states.__name__)
-
-    @abc.abstractmethod
-    def is_winning(self, state: State):
-        raise NotImplementedError("Game " + self.name + " is missing implementation for "
-                                  + self.is_winning.__name__)
 
     @abc.abstractmethod
     def new_game(self):

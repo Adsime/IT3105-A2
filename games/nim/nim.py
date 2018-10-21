@@ -1,20 +1,29 @@
 from games.game import Game
 from games.state import State
 import random
+import time
 
 
 class NimState(State):
 
-    def __init__(self, parent: State, player, players, n, grab_count):
-        self.super = State.__init__(self, parent, player, players)
+    def __init__(self, parent: State, player, n, grab_count):
+        self.super = State.__init__(self, parent, player)
         self.n = n
         self.grab_count = grab_count
 
     def is_terminal(self):
-        return not self.n
+        return self.n == 0
 
     def option_text(self):
         return self.grab_count
+
+    def __copy__(self):
+        copy = NimState(self.parent, self.player, self.n, self.grab_count)
+        copy.children = self.children
+        return copy
+
+    def __add__(self, vals):
+        return NimState(self, vals[0], self.n - vals[1], vals[1])
 
 
 class Nim(Game):
@@ -27,31 +36,32 @@ class Nim(Game):
         self.k = k  # Max count of stones to remove
 
     def gen_initial_state(self):
-        fp = random.choice(self.players) if self.p == "mix" else self.players[self.p]
-        state = NimState(None, fp, self.players, self.n, 0)
+        self.current_player = random.choice(self.players) if self.p == "mix" else self.players[self.p]
+        state = NimState(None, None, self.n, 0)
         return state
 
     def gen_child_states(self, state: NimState):
         states = []
-        player = self.players[(self.players.index(state.player) + 1) % len(self.players)]
+        p = self.current_player
+        if state.player:
+            p = self.players[(self.players.index(state.player) + 1) % len(self.players)]
         for i in range(1, min(state.n, self.k) + 1):
-            states.append(NimState(state, player, self.players, state.n - i, i))
+            states.append(state + (p, i))
         return states
-
-    def is_winning(self, state: State):
-        raise NotImplementedError("Game " + self.name + " is missing implementation for "
-                                  + self.is_winning.__name__)
 
     def new_game(self):
         state = self.gen_initial_state()
-        root = state
+        print("\nNEW GAME")
         while not state.is_terminal():
-            state = state.player.request_input(self, state)
-            print("Player: '" + state.parent.player.name + "' chose action: " + str(state.grab_count))
-            print("Remaining stones: " + str(state.n))
-            print()
-        print([c.q for c in root.children])
-
+            print(self.current_player.name)
+            state.children = self.gen_child_states(state)
+            state = self.current_player.request_input(self, state)
+            self.current_player = self.players[(self.players.index(self.current_player) + 1) % len(self.players)]
+            #print("Player: '" + state.parent.player.name + "' chose action: " + str(state.grab_count))
+            #print("Remaining stones: " + str(state.n))
+            #print()
+        #time.sleep(2)
+        return state.player
 
 
 

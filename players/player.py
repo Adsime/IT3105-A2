@@ -15,6 +15,3 @@ class Player:
     def reset(self):
         pass
 
-    def __repr__(self):
-        return self.name
-
