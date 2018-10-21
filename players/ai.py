@@ -1,5 +1,6 @@
 from players.player import Player, Game, State
 from mcts.mcts import MCTS
+import graph
 
 
 class AI(Player):
@@ -15,4 +16,5 @@ class AI(Player):
         self.brain.simulate(game, sim_state)
         best = self.brain.get_best_child(sim_state)
         children = sim_state.children
+        #graph.print_graph(best, "")
         return state.children[children.index(best)]

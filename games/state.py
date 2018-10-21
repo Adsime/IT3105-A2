@@ -20,12 +20,14 @@ class State:
         self.wins += wins
         self.visits += visits
         # Root should not need updates
-        if self.parent:
-            self.q = self.wins/self.visits
-            self.u = np.sqrt(np.log(self.parent.visits + visits)/self.visits)
+        #if self.parent:
+        self.q = self.wins/self.visits
+            #self.u = np.sqrt(np.log(self.parent.visits + visits)/self.visits)
 
     def get_uct(self, max):
-        return self.q + (self.u if max else -self.u)
+        if self.parent:
+            self.u = np.sqrt(np.log(self.parent.visits)/self.visits)
+        return self.q + self.u if max else 0#(self.u if max else -self.u)
 
     @abc.abstractmethod
     def option_text(self):
