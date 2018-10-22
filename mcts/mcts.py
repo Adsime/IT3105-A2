@@ -11,11 +11,10 @@ class MCTS:
 
     def simulate(self, game: Game, state: State):
         for i in range(self.m):
-            child = fin = self.tree_search(state, game.current_player)
+            child = self.tree_search(state, game.current_player)
             self.expand(game, child)
-            if not child.is_terminal():
-                fin = self.do_random_walk(game, child)
-            self.backpropagate(child, fin.player == game.current_player, 1)
+            fin = self.do_random_walk(game, child)
+            self.backprop(child, fin.player == child.player, 1)
 
     def do_random_walk(self, game: Game, state: State):
         if state.is_terminal():
@@ -27,18 +26,18 @@ class MCTS:
             return state
         unvisited_states = [s for s in state.children if not s.visits]
         state = random.choice(unvisited_states) if len(unvisited_states) \
-            else self.get_best_child(state, current_player != state.player)
+            else self.get_best_child(state, True)
         return self.tree_search(state, current_player)
 
-    def get_best_child(self, state: State, max=True):
-        state_util = [s.get_uct(max) for s in state.children]   # q +- u based on max for each child state
+    def get_best_child(self, state: State, explore=False):
+        state_util = [s.get_uct(explore) for s in state.children]   # q +- u based on max for each child state
         idx = np.argmax(state_util) #if max else np.argmin(state_util)   # find node of least or most utility based on max
         return state.children[idx]
 
     def expand(self, game: Game, state: State):
         state.children = game.gen_child_states(state)
 
-    def backpropagate(self, state: State, win, visits):
+    def backprop(self, state: State, win, visits):
         state.update(1 if win else 0, visits)
         if state.parent:
-            self.backpropagate(state.parent, not win, visits)
+            self.backprop(state.parent, not win, visits)

@@ -1,7 +1,6 @@
 from games.game import Game
 from games.state import State
 import random
-import time
 
 
 class NimState(State):
@@ -18,8 +17,14 @@ class NimState(State):
         copy.children = self.children
         return copy
 
-    def __add__(self, vals):
-        return NimState(self, vals[0], self.n - vals[1])
+    def __add__(self, picked):
+        return NimState(self, None, self.n - picked)
+
+    def __eq__(self, other):
+        return self.n == other.n
+
+    def __hash__(self):
+        return self.n
 
 
 class Nim(Game):
@@ -30,10 +35,13 @@ class Nim(Game):
         self.p = p
         self.n = n  # Stone count
         self.k = k  # Max count of stones to remove
+        self.states = {}
 
     def gen_initial_state(self):
-        self.current_player = random.choice(self.players) if self.p == "mix" else self.players[self.p]
+        self.states = {}
         state = NimState(None, None, self.n)
+        self.states[hash(state)] = state
+        self.current_player = random.choice(self.players) if self.p == "mix" else self.players[self.p]
         return state
 
     def gen_child_states(self, state: NimState):
@@ -42,7 +50,11 @@ class Nim(Game):
         if state.player:
             p = self.players[(self.players.index(state.player) + 1) % len(self.players)]
         for i in range(1, min(state.n, self.k) + 1):
-            states.append(state + (p, i))
+            s = state + i
+            if not hash(s) in self.states:
+                self.states[hash(s)] = s
+            s.player, s.parent = p, state
+            states.append(s)
         return states
 
     def new_game(self):
@@ -53,10 +65,6 @@ class Nim(Game):
             state = self.current_player.request_input(self, state)
             print(self.current_player.name, "took", state.parent.n - state.n, "stones")
             self.current_player = self.players[(self.players.index(self.current_player) + 1) % len(self.players)]
-            #print("Player: '" + state.parent.player.name + "' chose action: " + str(state.grab_count))
-            #print("Remaining stones: " + str(state.n))
-            #print()
-        #time.sleep(2)
         return state.player
 
 

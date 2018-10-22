@@ -19,15 +19,11 @@ class State:
     def update(self, wins, visits):
         self.wins += wins
         self.visits += visits
-        # Root should not need updates
-        #if self.parent:
-        self.q = self.wins/self.visits
-            #self.u = np.sqrt(np.log(self.parent.visits + visits)/self.visits)
 
-    def get_uct(self, max):
-        if self.parent:
-            self.u = np.sqrt(np.log(self.parent.visits)/self.visits)
-        return self.q + self.u if max else 0#(self.u if max else -self.u)
+    def get_uct(self, explore):
+        q = self.wins / self.visits
+        u = np.sqrt(np.log(self.parent.visits) / self.visits)
+        return q + np.sqrt(2)*(u if explore else 0) #if max else 0#(self.u if max else -self.u)
 
     @abc.abstractmethod
     def option_text(self):
@@ -36,4 +32,11 @@ class State:
     @abc.abstractmethod
     def __copy__(self):
         raise NotImplementedError(self.__copy__.__name__)
+
+    @abc.abstractmethod
+    def __hash__(self):
+        raise NotImplementedError(self.__hash__.__name__)
+
+    def __eq__(self, other):
+        raise NotImplementedError(self.__eq__.__name__)
 

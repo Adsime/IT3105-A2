@@ -12,6 +12,3 @@ class Player:
     def request_input(self, game: Game, state: State):
         raise NotImplementedError(self.request_input.__name__)
 
-    def reset(self):
-        pass
-

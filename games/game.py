@@ -9,6 +9,7 @@ class Game:
     def __init__(self, name):
         self.name = name
         self.current_player = None
+        self.states = {}
 
     @abc.abstractmethod
     def gen_initial_state(self):
