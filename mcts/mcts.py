@@ -11,7 +11,7 @@ class MCTS:
 
     def simulate(self, game: Game, state: State):
         for i in range(self.m):
-            child = self.tree_search(state, game.current_player)
+            child = self.tree_search(game, state)
             self.expand(game, child)
             fin = self.do_random_walk(game, child)
             self.backprop(child, fin.player == child.player, 1)
@@ -19,15 +19,15 @@ class MCTS:
     def do_random_walk(self, game: Game, state: State):
         if state.is_terminal():
             return state
-        return self.do_random_walk(game, random.choice(game.gen_child_states(state)))
+        return self.do_random_walk(game, random.choice(game.gen_child_states(state, False)))
 
-    def tree_search(self, state: State, current_player):
+    def tree_search(self, game: Game, state: State):
         if not len(state.children):
             return state
         unvisited_states = [s for s in state.children if not s.visits]
         state = random.choice(unvisited_states) if len(unvisited_states) \
             else self.get_best_child(state, True)
-        return self.tree_search(state, current_player)
+        return self.tree_search(game, state)
 
     def get_best_child(self, state: State, explore=False):
         state_util = [s.get_uct(explore) for s in state.children]   # q +- u based on max for each child state

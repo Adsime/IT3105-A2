@@ -44,18 +44,18 @@ class Nim(Game):
         self.current_player = random.choice(self.players) if self.p == "mix" else self.players[self.p]
         return state
 
-    def gen_child_states(self, state: NimState):
+    def gen_child_states(self, state: NimState, track_new=True):
         states = []
         p = self.current_player
         if state.player:
             p = self.players[(self.players.index(state.player) + 1) % len(self.players)]
         for i in range(1, min(state.n, self.k) + 1):
             s = state + i
-            if not hash(s) in self.states:
+            if not hash(s) in self.states and track_new:
                 self.states[hash(s)] = s
             s.player, s.parent = p, state
             states.append(s)
-        return states
+        return states if len(states) == min(state.n, self.k) else []
 
     def new_game(self):
         state = self.gen_initial_state()
