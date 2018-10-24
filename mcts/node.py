@@ -1,10 +1,12 @@
 from games.state import State
-from players.player import Player
 
 
 class Node:
 
-    def __init__(self, parent, state: State, player: Player):
+    def __init__(self, parent, state: State, player):
         self.parent = parent
         self.state = state
         self.player = player
+
+    def __copy__(self):
+        return Node(self.parent, self.state.__copy__(), self.player)

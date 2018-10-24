@@ -7,8 +7,8 @@ class Human(Player):
         Player.__init__(self, name)
 
     def request_input(self, game: Game, state: State):
-        options = game.gen_child_states(state)
-        return options[self.query_user([s.option_text() for s in options])]
+        options = game.gen_child_states(state, False)
+        return options[self.query_user([s.option_text(state) for s in options])]
 
     def query_user(self, options):
         stringyfied_options = [str(o) for o in options]

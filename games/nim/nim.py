@@ -1,71 +1,96 @@
 from games.game import Game
 from games.state import State
 import random
-
+from mcts.node import Node
+import uuid
 
 class NimState(State):
 
-    def __init__(self, parent: State, player, n):
-        self.super = State.__init__(self, parent, player)
+    def __init__(self, n, unique_states=False):
+        self.super = State.__init__(self)
         self.n = n
+        self.unique_states = unique_states
+        self.id = uuid.uuid4()
 
     def is_terminal(self):
         return self.n == 0
 
+    def option_text(self, parent):
+        return str(parent.n - self.n)
+
     def __copy__(self):
-        copy = NimState(None, self.player, self.n)
-        copy.children = self.children
+        copy = NimState(self.n, self.unique_states)
         return copy
 
-    def __add__(self, picked):
-        return NimState(self, None, self.n - picked)
+    def __add__(self, items):
+        return NimState(self.n - items, self.unique_states)
 
     def __eq__(self, other):
         return self.n == other.n
 
     def __hash__(self):
-        return self.n
+        return hash(self.id if self.unique_states else self.n)
 
 
 class Nim(Game):
 
-    def __init__(self, players, p, n=10, k=3):
-        Game.__init__(self, "Nim")
-        self.players = players
-        self.p = p
+    def __init__(self, players, first_player, n=10, k=3, verbose=False, memory_level=0, unique_states=False):
+        Game.__init__(self, "Nim", players, first_player)
         self.n = n  # Stone count
         self.k = k  # Max count of stones to remove
-        self.states = {}
+        self.verbose = verbose
+        self.memory_level=memory_level
+        self.unique_states = unique_states
 
     def gen_initial_state(self):
-        self.states = {}
-        state = NimState(None, None, self.n)
-        self.states[hash(state)] = state
-        self.current_player = random.choice(self.players) if self.p == "mix" else self.players[self.p]
+        if self.memory_level < 2:
+            self.states = {}
+        state = NimState(self.n, self.unique_states)
+        if not hash(state) in self.states:
+            self.states[hash(state)] = state
+        else:
+            state = self.states[hash(state)]
+        self.current_player = random.choice(self.players) if self.first_player == "mix" else self.players[self.first_player]
         return state
 
-    def gen_child_states(self, state: NimState, track_new=True):
+    def gen_child_states(self, state: State, save_new=False):
+        if len(state.children):
+            return state.children
         states = []
-        p = self.current_player
-        if state.player:
-            p = self.players[(self.players.index(state.player) + 1) % len(self.players)]
-        for i in range(1, min(state.n, self.k) + 1):
+        for i in range(1, min(state.n, self.k) + 1):    # All possible moves from state
             s = state + i
-            if not hash(s) in self.states and track_new:
-                self.states[hash(s)] = s
-            s.player, s.parent = p, state
+            idx = hash(s)
+            if not idx in self.states and save_new:
+                self.states[idx] = s
+            if idx in self.states:  #
+                s = self.states[idx]
             states.append(s)
-        return states if len(states) == min(state.n, self.k) else []
+        return states
+
+    def gen_child_nodes(self, node: Node):
+        p = self.get_next_player(node.player)
+        nodes = [Node(node, s, p) for s in self.gen_child_states(node.state)]
+        return nodes
+
+    def print_game_info(self, parent_state, current_state):
+        if self.verbose:
+            print("Player", self.current_player.name, "selects", parent_state.n - current_state.n,
+                  "stones: Remaining stones =", current_state.n)
 
     def new_game(self):
         state = self.gen_initial_state()
-        print("\nNEW GAME")
+        if self.verbose: print("\n------------- NEW GAME -------------")
         while not state.is_terminal():
-            state.children = self.gen_child_states(state)
+            if self.memory_level < 1:
+                self.states = {}
+                state.reset()
+            parent = state
             state = self.current_player.request_input(self, state)
-            print(self.current_player.name, "took", state.parent.n - state.n, "stones")
-            self.current_player = self.players[(self.players.index(self.current_player) + 1) % len(self.players)]
-        return state.player
+            self.print_game_info(parent, state)
+            if not state.is_terminal(): # Means the current player won
+                self.current_player = self.players[(self.players.index(self.current_player) + 1) % len(self.players)]
+        if self.verbose: print("Player", self.current_player.name, "wins")
+        return self.current_player
 
 
 
